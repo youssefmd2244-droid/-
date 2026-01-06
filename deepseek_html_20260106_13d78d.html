@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر نقاشة سعودي</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Admin Access Modal -->
+    <div id="adminAccessModal" class="modal">
+        <div class="modal-content">
+            <h2>الدخول إلى لوحة التحكم</h2>
+            <p>أدخل رمز التحكم للوصول إلى لوحة الإدارة:</p>
+            <input type="password" id="adminCodeInput" placeholder="أدخل الرمز السري" maxlength="4">
+            <div class="modal-buttons">
+                <button id="submitAdminCode" class="btn-primary">دخول</button>
+                <button id="cancelAdminCode" class="btn-secondary">استعراض المتجر فقط</button>
+            </div>
+            <p class="hint">تلميح: الرمز هو 2004</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo-container">
+                <div class="logo" id="storeLogo">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h1 id="storeName">متجر نقاشة سعودي</h1>
+            </div>
+            
+            <div class="header-controls">
+                <div class="theme-toggle">
+                    <button id="themeToggle" class="icon-btn" aria-label="تبديل السمة">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <div class="admin-access">
+                    <button id="adminAccessBtn" class="icon-btn" aria-label="لوحة التحكم">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                <div class="mobile-menu-btn">
+                    <button id="mobileMenuBtn" class="icon-btn" aria-label="القائمة">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <nav class="mobile-nav" id="mobileNav">
+            <ul>
+                <li><a href="#" data-section="home">الرئيسية</a></li>
+                <li><a href="#" data-section="products">المنتجات</a></li>
+                <li><a href="#" data-section="videos">فيديوهات المنتجات</a></li>
+                <li><a href="#" data-section="comments">التعليقات</a></li>
+                <li><a href="#" data-section="updates">التحديثات</a></li>
+                <li><a href="#" data-section="contact">الدعم</a></li>
+                <li><a href="#" data-section="programmer">المطور</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Admin Panel (Hidden by default) -->
+        <section id="adminPanel" class="admin-panel hidden">
+            <div class="admin-header">
+                <h2><i class="fas fa-cogs"></i> لوحة التحكم</h2>
+                <button id="closeAdminPanel" class="icon-btn" aria-label="إغلاق لوحة التحكم">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="products-tab">المنتجات</button>
+                <button class="admin-tab" data-tab="sections-tab">الأقسام</button>
+                <button class="admin-tab" data-tab="comments-tab">التعليقات</button>
+                <button class="admin-tab" data-tab="updates-tab">التحديثات</button>
+                <button class="admin-tab" data-tab="settings-tab">الإعدادات</button>
+                <button class="admin-tab" data-tab="ai-tab">المساعد الذكي</button>
+            </div>
+            
+            <div class="admin-content">
+                <!-- Products Management Tab -->
+                <div id="products-tab" class="admin-tab-content active">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-box"></i> إدارة المنتجات</h3>
+                        <button id="addProductBtn" class="btn-primary"><i class="fas fa-plus"></i> إضافة منتج جديد</button>
+                        
+                        <div class="sortable-products" id="sortableProducts">
+                            <!-- Products will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sections Management Tab -->
+                <div id="sections-tab" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-th-large"></i> إدارة الأقسام</h3>
+                        <div class="sections-list" id="sectionsList">
+                            <!-- Sections will be added here dynamically -->
+                        </div>
+                        <div class="add-section">
+                            <input type="text" id="newSectionName" placeholder="اسم القسم الجديد">
+                            <button id="addSectionBtn" class="btn-primary">إضافة قسم</button>
+                            <button id="aiGenerateSectionBtn" class="btn-secondary">اقتراح قسم بالذكاء الاصطناعي</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comments Management Tab -->
+                <div id="comments-tab" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-comments"></i> إدارة التعليقات</h3>
+                        <div class="comments-list" id="adminCommentsList">
+                            <!-- Comments will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Updates Management Tab -->
+                <div id="updates-tab" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-bullhorn"></i> إدارة التحديثات</h3>
+                        <div class="add-update">
+                            <textarea id="newUpdateText" placeholder="محتوى التحديث الجديد"></textarea>
+                            <button id="addUpdateBtn" class="btn-primary">نشر تحديث</button>
+                        </div>
+                        <div class="updates-list" id="adminUpdatesList">
+                            <!-- Updates will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="settings-tab" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-sliders-h"></i> إعدادات المتجر</h3>
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label for="storeNameInput">اسم المتجر</label>
+                                <input type="text" id="storeNameInput" value="متجر نقاشة سعودي">
+                            </div>
+                            <div class="setting-item">
+                                <label for="storeCurrency">العملة</label>
+                                <select id="storeCurrency">
+                                    <option value="SAR" selected>ريال سعودي (SAR)</option>
+                                    <option value="USD">دولار أمريكي (USD)</option>
+                                    <option value="EUR">يورو (EUR)</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="storeLanguage">اللغة</label>
+                                <select id="storeLanguage">
+                                    <option value="ar" selected>العربية</option>
+                                    <option value="en">الإنجليزية</option>
+                                    <option value="fr">الفرنسية</option>
+                                </select>
+                            </div>
+                            <div class="setting-item full-width">
+                                <label for="primaryColor">اللون الأساسي</label>
+                                <input type="color" id="primaryColor" value="#3a86ff">
+                            </div>
+                            <div class="setting-item">
+                                <label for="whatsappNumber">رقم واتساب</label>
+                                <input type="text" id="whatsappNumber" placeholder="966500000000">
+                            </div>
+                            <div class="setting-item">
+                                <label for="instagramAccount">حساب إنستغرام</label>
+                                <input type="text" id="instagramAccount" placeholder="اسم المستخدم">
+                            </div>
+                        </div>
+                        
+                        <div class="danger-zone">
+                            <h4><i class="fas fa-exclamation-triangle"></i> منطقة الخطر</h4>
+                            <div class="danger-buttons">
+                                <button id="factoryResetBtn" class="btn-danger">استعادة الإعدادات الافتراضية</button>
+                                <button id="clearDataBtn" class="btn-danger">حذف جميع البيانات</button>
+                                <button id="saveSettingsBtn" class="btn-primary">حفظ جميع الإعدادات</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Assistant Tab -->
+                <div id="ai-tab" class="admin-tab-content">
+                    <div class="admin-section">
+                        <h3><i class="fas fa-robot"></i> المساعد الذكي</h3>
+                        <div class="ai-suggestions">
+                            <div class="ai-suggestion">
+                                <h4>اقتراح تخطيط</h4>
+                                <p>يقترح الذكاء الاصطناعي ترتيب المنتجات الأكثر مبيعًا أولاً</p>
+                                <button class="btn-secondary apply-ai-suggestion" data-type="layout">تطبيق الاقتراح</button>
+                            </div>
+                            <div class="ai-suggestion">
+                                <h4>إنشاء سمة جديدة</h4>
+                                <p>إنشاء سمة ألوان متناسقة وجذابة للمتجر</p>
+                                <button class="btn-secondary apply-ai-suggestion" data-type="theme">إنشاء سمة</button>
+                            </div>
+                            <div class="ai-suggestion">
+                                <h4>اقتراح أقسام جديدة</h4>
+                                <p>اقتراح أقسام مناسبة لنوع منتجاتك</p>
+                                <button class="btn-secondary apply-ai-suggestion" data-type="sections">اقتراح أقسام</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bento Grid Store Content -->
+        <div class="bento-grid" id="storeGrid">
+            <!-- Home Section -->
+            <section id="homeSection" class="bento-item bento-large" data-section="home">
+                <div class="section-header">
+                    <h2><i class="fas fa-home"></i> الرئيسية</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="home" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="welcome-message">
+                        <h3>مرحبًا بكم في <span id="dynamicStoreName">متجر نقاشة سعودي</span></h3>
+                        <p>متجر سعودي يقدم أجود المنتجات بأفضل الأسعار</p>
+                    </div>
+                    <div class="pinned-comments" id="pinnedComments">
+                        <h4>آراء العملاء المميزة</h4>
+                        <!-- Pinned comments will be added here dynamically -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Products Section -->
+            <section id="productsSection" class="bento-item bento-large" data-section="products">
+                <div class="section-header">
+                    <h2><i class="fas fa-box-open"></i> المنتجات</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="products" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="products-grid" id="productsGrid">
+                        <!-- Products will be loaded here dynamically -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Product Videos Section -->
+            <section id="videosSection" class="bento-item bento-medium" data-section="videos">
+                <div class="section-header">
+                    <h2><i class="fas fa-video"></i> فيديوهات المنتجات</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="videos" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="videos-grid" id="videosGrid">
+                        <!-- Videos will be loaded here dynamically -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Comments Section -->
+            <section id="commentsSection" class="bento-item bento-medium" data-section="comments">
+                <div class="section-header">
+                    <h2><i class="fas fa-comment-dots"></i> التعليقات</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="comments" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="add-comment">
+                        <textarea id="newCommentText" placeholder="اكتب تعليقك هنا..."></textarea>
+                        <button id="submitCommentBtn" class="btn-primary">إضافة تعليق</button>
+                    </div>
+                    <div class="comments-list" id="commentsList">
+                        <!-- Comments will be loaded here dynamically -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Updates Section -->
+            <section id="updatesSection" class="bento-item bento-small" data-section="updates">
+                <div class="section-header">
+                    <h2><i class="fas fa-bullhorn"></i> التحديثات</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="updates" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="updates-list" id="updatesList">
+                        <!-- Updates will be loaded here dynamically -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Contact Support Section -->
+            <section id="contactSection" class="bento-item bento-small" data-section="contact">
+                <div class="section-header">
+                    <h2><i class="fas fa-headset"></i> الدعم</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="contact" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="contact-info">
+                        <p>للتواصل والدعم الفني:</p>
+                        <div class="contact-buttons">
+                            <a href="https://wa.me/966500000000" class="contact-btn whatsapp-btn" target="_blank">
+                                <i class="fab fa-whatsapp"></i> واتساب
+                            </a>
+                            <a href="https://instagram.com" class="contact-btn instagram-btn" target="_blank">
+                                <i class="fab fa-instagram"></i> إنستغرام
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Programmer Section -->
+            <section id="programmerSection" class="bento-item bento-small" data-section="programmer">
+                <div class="section-header">
+                    <h2><i class="fas fa-code"></i> المطور</h2>
+                    <div class="section-controls">
+                        <button class="section-toggle" data-section="programmer" aria-label="إظهار/إخفاء القسم">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="programmer-info">
+                        <div class="programmer-logo">
+                            <i class="fas fa-laptop-code"></i>
+                        </div>
+                        <h4>y.f.o.m للبرمجيات والتطوير</h4>
+                        <p>تطوير متاجر إلكترونية متكاملة</p>
+                        <div class="programmer-contact">
+                            <a href="https://wa.me/966500000001" class="icon-btn" target="_blank">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="https://instagram.com" class="icon-btn" target="_blank">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="productModalTitle">إضافة منتج جديد</h2>
+            <div class="form-group">
+                <label for="productName">اسم المنتج</label>
+                <input type="text" id="productName" placeholder="أدخل اسم المنتج">
+            </div>
+            <div class="form-group">
+                <label for="productPrice">السعر (SAR)</label>
+                <input type="number" id="productPrice" placeholder="أدخل السعر" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="productDescription">وصف المنتج</label>
+                <textarea id="productDescription" placeholder="أدخل وصف المنتج"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="productMediaType">نوع الوسائط</label>
+                <select id="productMediaType">
+                    <option value="image">صورة</option>
+                    <option value="video">فيديو</option>
+                    <option value="gif">صورة متحركة (GIF)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="productMediaUrl">رابط الوسائط (URL)</label>
+                <input type="text" id="productMediaUrl" placeholder="أدخل رابط الصورة/الفيديو">
+                <small>يمكنك استخدام رابط من الإنترنت أو رفع ملف لاحقًا</small>
+            </div>
+            <div class="form-group">
+                <label for="productCategory">القسم</label>
+                <select id="productCategory">
+                    <option value="عام">عام</option>
+                    <!-- Categories will be populated dynamically -->
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button id="saveProductBtn" class="btn-primary">حفظ المنتج</button>
+                <button id="cancelProductBtn" class="btn-secondary">إلغاء</button>
+            </div>
+            <input type="hidden" id="editingProductId" value="">
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
